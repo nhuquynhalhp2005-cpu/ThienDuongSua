@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Edit3, Trash2, FolderSync, DollarSign, Package, ShoppingBag, 
-  Users, Check, X, ShieldAlert, Sparkles, Filter, Search, Eye, Settings, FileText
+  Users, Check, X, ShieldAlert, Sparkles, Filter, Search, Eye, Settings, FileText, Flame
 } from 'lucide-react';
 import { Product, Order, UserProfile, MilkCategory, SystemSettings, Slide, HomeCategorySetting } from '../types';
 import { 
@@ -74,6 +74,13 @@ export default function AdminPanel({
     ]
   );
 
+  // Flash Sale customization states
+  const [flashSaleTitle, setFlashSaleTitle] = useState(settings?.flashSaleTitle || "CƠN LỐC FLASH SALE");
+  const [flashSaleSubtitle, setFlashSaleSubtitle] = useState(settings?.flashSaleSubtitle || "Săn giá hời - Số lượng giới hạn dành riêng cho bé");
+  const [flashSaleDiscount, setFlashSaleDiscount] = useState(settings?.flashSaleDiscount ?? 15);
+  const [flashSaleDurationMinutes, setFlashSaleDurationMinutes] = useState(settings?.flashSaleDurationMinutes ?? 120);
+  const [flashSaleProductIds, setFlashSaleProductIds] = useState<string[]>(settings?.flashSaleProductIds || []);
+
   // Sync state if settings prop changes (e.g. on load)
   useEffect(() => {
     if (settings) {
@@ -90,6 +97,11 @@ export default function AdminPanel({
       if (settings.homeCategories && settings.homeCategories.length > 0) {
         setHomeCategories(settings.homeCategories);
       }
+      setFlashSaleTitle(settings.flashSaleTitle || "CƠN LỐC FLASH SALE");
+      setFlashSaleSubtitle(settings.flashSaleSubtitle || "Săn giá hời - Số lượng giới hạn dành riêng cho bé");
+      setFlashSaleDiscount(settings.flashSaleDiscount ?? 15);
+      setFlashSaleDurationMinutes(settings.flashSaleDurationMinutes ?? 120);
+      setFlashSaleProductIds(settings.flashSaleProductIds || []);
     }
   }, [settings]);
 
@@ -106,7 +118,12 @@ export default function AdminPanel({
       bannerSlides: slides,
       homeCategoryTitle,
       homeCategorySubtitle,
-      homeCategories
+      homeCategories,
+      flashSaleTitle,
+      flashSaleSubtitle,
+      flashSaleDiscount,
+      flashSaleDurationMinutes,
+      flashSaleProductIds
     };
 
     try {
@@ -137,6 +154,7 @@ export default function AdminPanel({
   const [prodStock, setProdStock] = useState(10);
   const [prodFeatured, setProdFeatured] = useState(false);
   const [prodIsNew, setProdIsNew] = useState(true);
+  const [prodWeight, setProdWeight] = useState('900g / Lon');
 
   const [prodSearch, setProdSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
@@ -162,6 +180,7 @@ export default function AdminPanel({
     setProdStock(p.stock);
     setProdFeatured(p.featured);
     setProdIsNew(p.isNew);
+    setProdWeight(p.weight || '900g / Lon');
     setShowProductForm(true);
   };
 
@@ -176,6 +195,7 @@ export default function AdminPanel({
     setProdStock(10);
     setProdFeatured(false);
     setProdIsNew(true);
+    setProdWeight('900g / Lon');
     setShowProductForm(false);
   };
 
@@ -197,6 +217,7 @@ export default function AdminPanel({
       stock: Number(prodStock),
       featured: prodFeatured,
       isNew: prodIsNew,
+      weight: prodWeight,
       createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString()
     };
 
@@ -491,6 +512,18 @@ export default function AdminPanel({
                     onChange={(e) => setProdStock(Number(e.target.value))}
                     placeholder="10"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 font-mono text-left"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-stone-400 uppercase">Khối lượng / Lon *</label>
+                  <input
+                    type="text"
+                    value={prodWeight}
+                    onChange={(e) => setProdWeight(e.target.value)}
+                    placeholder="900g / Lon"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 text-left"
                     required
                   />
                 </div>
@@ -1040,6 +1073,115 @@ export default function AdminPanel({
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* CẤU HÌNH CƠN LỐC FLASH SALE */}
+          <div className="p-6 rounded-3.5xl border border-red-150 bg-red-50/20 space-y-6">
+            <h3 className="text-sm font-black text-stone-850 uppercase tracking-widest flex items-center gap-2 pb-3 border-b border-red-200/50">
+              <Flame className="w-5 h-5 text-red-500 animate-pulse" />
+              <span>Cài Đặt "Cơn Lốc Flash Sale" Giờ Vàng</span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Tiêu Đề Flash Sale</label>
+                <input
+                  type="text"
+                  value={flashSaleTitle}
+                  onChange={(e) => setFlashSaleTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none font-bold focus:border-red-450 focus:ring-1 focus:ring-red-450 text-stone-800 bg-white"
+                  placeholder="CƠN LỐC FLASH SALE"
+                />
+              </div>
+
+              <div className="space-y-1.5 text-left md:col-span-2">
+                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Mô tả phụ ngắn</label>
+                <input
+                  type="text"
+                  value={flashSaleSubtitle}
+                  onChange={(e) => setFlashSaleSubtitle(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none focus:border-red-450 focus:ring-1 focus:ring-red-450 text-stone-800 bg-white"
+                  placeholder="Săn giá hời - Số lượng giới hạn dành riêng cho bé"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">% Giảm giá (% Off)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={flashSaleDiscount}
+                    onChange={(e) => setFlashSaleDiscount(Number(e.target.value))}
+                    className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none font-mono focus:border-red-450 focus:ring-1 focus:ring-red-450 text-stone-800 bg-white text-center"
+                    placeholder="15"
+                  />
+                </div>
+
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Số phút đếm ngược</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={flashSaleDurationMinutes}
+                    onChange={(e) => setFlashSaleDurationMinutes(Number(e.target.value))}
+                    className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none font-mono focus:border-red-450 focus:ring-1 focus:ring-red-450 text-stone-800 bg-white text-center"
+                    placeholder="120"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Product selection list grid */}
+            <div className="space-y-2 text-left bg-white p-5 rounded-3xl border border-red-100/50">
+              <span className="text-xs font-black text-stone-700 uppercase tracking-wider block mb-1">
+                Lựa Chọn Sản Phẩm Khuyến Mãi Flash Sale:
+              </span>
+              <p className="text-[11px] text-stone-450 leading-relaxed font-medium">
+                Hãy tích chọn các hộp sữa bột bạn muốn đính kèm trong mục Flash Sale đặc biệt trên Trang chủ. Nếu chưa tích chọn sản phẩm riêng nào, hệ thống sẽ tự động hiển thị 3 sản phẩm đầu tiên từ tủ kệ sữa của bạn để đảm bảo giao diện luôn được lấp đầy.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3 max-h-64 overflow-y-auto pr-1">
+                {products.map((p) => {
+                  const isChecked = flashSaleProductIds.includes(p.id || "");
+                  const toggleProduct = () => {
+                    if (isChecked) {
+                      setFlashSaleProductIds(flashSaleProductIds.filter(id => id !== p.id));
+                    } else {
+                      setFlashSaleProductIds([...flashSaleProductIds, p.id || ""]);
+                    }
+                  };
+                  return (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={toggleProduct}
+                      className={`flex items-center gap-3 p-3 rounded-2xl border text-left transition-all hover:bg-neutral-50/60 cursor-pointer ${
+                        isChecked 
+                          ? 'border-red-400 bg-red-100/10 shadow-3xs text-red-950 font-bold' 
+                          : 'border-stone-200 text-stone-700 bg-white'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                        isChecked ? 'bg-red-500 border-red-500 text-white' : 'border-stone-300 bg-white'
+                      }`}>
+                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+                      
+                      <img src={p.imageUrl} alt={p.name} className="w-9 h-9 object-contain rounded-xl bg-stone-50" referrerPolicy="no-referrer" />
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs truncate font-extrabold leading-tight text-neutral-800">{p.name}</h4>
+                        <span className="text-[9px] uppercase tracking-wider block text-stone-400 mt-0.5 font-bold">
+                          {p.brand} • {p.weight || "900g / Lon"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

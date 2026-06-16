@@ -293,7 +293,7 @@ export default function ShopView({ products, onAddToCart, initialCategoryFilter,
               {/* Price and Add button area */}
               <div className="p-5 pt-0 text-left border-t border-stone-50/50 flex items-end justify-between">
                 <div>
-                  <span className="text-[10px] font-semibold text-stone-350 block leading-none mb-1">Mỗi Hộp can 900g</span>
+                  <span className="text-[10px] font-semibold text-stone-350 block leading-none mb-1">{p.weight || "Mỗi Hộp can 900g"}</span>
                   <span className="text-base font-extrabold text-amber-500 font-mono">
                     {p.price.toLocaleString('vi-VN')}đ
                   </span>

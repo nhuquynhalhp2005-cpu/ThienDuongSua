@@ -10,6 +10,7 @@ export interface Product {
   featured: boolean;
   isNew: boolean;
   createdAt: string; // ISO string
+  weight?: string; // e.g. "900g / Lon" or "400g"
 }
 
 export type MilkCategory = "children" | "adults" | "seniors" | "pregnant";
@@ -57,6 +58,11 @@ export interface SystemSettings {
   homeCategoryTitle?: string;
   homeCategorySubtitle?: string;
   homeCategories?: HomeCategorySetting[];
+  flashSaleTitle?: string;
+  flashSaleSubtitle?: string;
+  flashSaleDiscount?: number; // e.g. 15 for 15%
+  flashSaleDurationMinutes?: number; // e.g. 120 minutes (2 hours)
+  flashSaleProductIds?: string[]; // IDs of products to display in Flash Sale
 }
 
 export interface CartItem {

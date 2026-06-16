@@ -29,30 +29,33 @@ import {
 } from 'lucide-react';
 
 // Small responsive countdown clock for e-commerce Flash Sale urgencies
-function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState({ hr: 2, min: 45, sec: 12 });
+function CountdownTimer({ durationMinutes }: { durationMinutes?: number }) {
+  const [secondsLeft, setSecondsLeft] = useState((durationMinutes ?? 120) * 60);
+
+  useEffect(() => {
+    setSecondsLeft((durationMinutes ?? 120) * 60);
+  }, [durationMinutes]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.sec > 0) {
-          return { ...prev, sec: prev.sec - 1 };
-        } else if (prev.min > 0) {
-          return { ...prev, min: prev.min - 1, sec: 59 };
-        } else if (prev.hr > 0) {
-          return { hr: prev.hr - 1, min: 59, sec: 59 };
-        } else {
-          return { hr: 2, min: 45, sec: 12 };
+      setSecondsLeft(prev => {
+        if (prev <= 1) {
+          return (durationMinutes ?? 120) * 60; // reset
         }
+        return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [durationMinutes]);
+
+  const hr = Math.floor(secondsLeft / 3600);
+  const min = Math.floor((secondsLeft % 3600) / 60);
+  const sec = secondsLeft % 60;
 
   const format = (num: number) => num.toString().padStart(2, '0');
 
   return (
-    <span>{format(timeLeft.hr)}:{format(timeLeft.min)}:{format(timeLeft.sec)}</span>
+    <span>{format(hr)}:{format(min)}:{format(sec)}</span>
   );
 }
 
@@ -367,95 +370,108 @@ export default function App() {
                     🔥
                   </div>
                   <div>
-                    <h3 className="text-xl md:text-2xl font-black text-stone-850 tracking-tight flex items-center gap-2">
-                      CƠN LỐC FLASH SALE
+                    <h3 className="text-xl md:text-2xl font-black text-stone-850 tracking-tight flex items-center gap-2 uppercase">
+                      {settings.flashSaleTitle || "CƠN LỐC FLASH SALE"}
                     </h3>
-                    <p className="text-xs text-stone-500 font-medium">Săn giá hời - Số lượng giới hạn dành riêng cho bé</p>
+                    <p className="text-xs text-stone-500 font-medium">
+                      {settings.flashSaleSubtitle || "Săn giá hời - Số lượng giới hạn dành riêng cho bé"}
+                    </p>
                   </div>
                 </div>
 
                 {/* Countdown clock representation */}
                 <div className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-2xl shadow-sm text-xs md:text-sm font-extrabold font-mono">
                   <span className="uppercase text-[9px] tracking-wider mr-1.5 font-sans">KẾT THÚC SAU:</span>
-                  <CountdownTimer />
+                  <CountdownTimer durationMinutes={settings.flashSaleDurationMinutes} />
                 </div>
               </div>
 
               {/* Flash Sale Products Item list */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.slice(0, 3).map((p) => {
-                  const salePrice = Math.round(p.price * 0.85); // 15% off for flash sale
-                  const percent = 82; // mock sold bar
-                  return (
-                    <div
-                      key={p.id}
-                      className="bg-white rounded-3xl border border-red-100 p-4 transition-all hover:shadow-lg flex flex-col justify-between group relative overflow-hidden"
-                    >
-                      {/* Sale Tag badge */}
-                      <div className="absolute top-3 left-3 bg-red-600 text-white font-black text-[10px] uppercase px-2 py-0.5 rounded-lg shadow-sm z-10">
-                        GIẢM 15%
+                {(() => {
+                  const discountPct = settings.flashSaleDiscount ?? 15;
+                  const factor = (100 - discountPct) / 100;
+                  
+                  // Filter products based on flashSaleProductIds in settings, or fallback to first 3 products
+                  let flashSaleProducts = products.filter(p => settings.flashSaleProductIds?.includes(p.id ?? ""));
+                  if (flashSaleProducts.length === 0) {
+                    flashSaleProducts = products.slice(0, 3);
+                  }
+                  
+                  return flashSaleProducts.map((p) => {
+                    const salePrice = Math.round(p.price * factor);
+                    const percent = 82; // mock sold bar
+                    return (
+                      <div
+                        key={p.id}
+                        className="bg-white rounded-3xl border border-red-100 p-4 transition-all hover:shadow-lg flex flex-col justify-between group relative overflow-hidden"
+                      >
+                        {/* Sale Tag badge */}
+                        <div className="absolute top-3 left-3 bg-red-600 text-white font-black text-[10px] uppercase px-2 py-0.5 rounded-lg shadow-sm z-10">
+                          GIẢM {discountPct}%
+                        </div>
+
+                        <div>
+                          {/* Product Image */}
+                          <div className="h-44 bg-stone-50/50 rounded-2xl flex items-center justify-center p-3 relative mb-4">
+                            <img
+                              src={p.imageUrl}
+                              alt={p.name}
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 duration-300"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+
+                          {/* Product Info */}
+                          <div className="text-left space-y-1 bg-white">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-amber-600">{p.brand}</span>
+                              <span className="text-[9px] text-stone-400 font-semibold">• Sữa chính hãng</span>
+                            </div>
+                            <h4 className="text-xs font-extrabold text-stone-800 line-clamp-2 h-9 leading-snug">
+                              {p.name}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* Sale price and add CTA */}
+                        <div className="space-y-3 pt-3 border-t border-stone-100 mt-3 text-left">
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-xs text-stone-400 font-semibold">{p.weight || "900g / Lon"}</span>
+                            <div className="flex items-center gap-1.5 font-mono">
+                              <span className="text-xs text-stone-400 line-through">{p.price.toLocaleString()}đ</span>
+                              <span className="text-sm font-black text-red-600">{salePrice.toLocaleString()}đ</span>
+                            </div>
+                          </div>
+
+                          {/* Sold progressive bar */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-stone-450 font-bold">
+                              <span>Đã bán 78%</span>
+                              <span className="text-red-600">Sắp cháy hàng!</span>
+                            </div>
+                            <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                              <div className="bg-gradient-to-r from-red-500 to-amber-500 h-full rounded-full" style={{ width: `${percent}%` }}></div>
+                            </div>
+                          </div>
+
+                          {/* Action click */}
+                          <button
+                            id={`flash-add-${p.id}`}
+                            onClick={() => {
+                              handleAddToCart({...p, price: salePrice}, 1);
+                              alert(`Đã thêm ${p.name} với giá Flash Sale đặc biệt vào giỏ hàng!`);
+                            }}
+                            className="w-full py-2.5 bg-gradient-to-r from-red-500 to-orange-600 text-white font-extrabold text-xs rounded-2xl hover:shadow-md cursor-pointer active:scale-[0.98] transition-all text-center"
+                          >
+                            🔥 Đặt Giao Tốc Hành
+                          </button>
+                        </div>
+
                       </div>
-
-                      <div>
-                        {/* Product Image */}
-                        <div className="h-44 bg-stone-50/50 rounded-2xl flex items-center justify-center p-3 relative mb-4">
-                          <img
-                            src={p.imageUrl}
-                            alt={p.name}
-                            className="max-h-full max-w-full object-contain group-hover:scale-105 duration-300"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-
-                        {/* Product Info */}
-                        <div className="text-left space-y-1 bg-white">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-600">{p.brand}</span>
-                            <span className="text-[9px] text-stone-400 font-semibold">• Sữa chính hãng</span>
-                          </div>
-                          <h4 className="text-xs font-extrabold text-stone-800 line-clamp-2 h-9 leading-snug">
-                            {p.name}
-                          </h4>
-                        </div>
-                      </div>
-
-                      {/* Sale price and add CTA */}
-                      <div className="space-y-3 pt-3 border-t border-stone-100 mt-3 text-left">
-                        <div className="flex items-baseline justify-between">
-                          <span className="text-xs text-stone-400 font-semibold">900g / Lon</span>
-                          <div className="flex items-center gap-1.5 font-mono">
-                            <span className="text-xs text-stone-400 line-through">{p.price.toLocaleString()}đ</span>
-                            <span className="text-sm font-black text-red-600">{salePrice.toLocaleString()}đ</span>
-                          </div>
-                        </div>
-
-                        {/* Sold progressive bar */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-[10px] text-stone-450 font-bold">
-                            <span>Đã bán 78%</span>
-                            <span className="text-red-600">Sắp cháy hàng!</span>
-                          </div>
-                          <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                            <div className="bg-gradient-to-r from-red-500 to-amber-500 h-full rounded-full" style={{ width: `${percent}%` }}></div>
-                          </div>
-                        </div>
-
-                        {/* Action click */}
-                        <button
-                          id={`flash-add-${p.id}`}
-                          onClick={() => {
-                            handleAddToCart({...p, price: salePrice}, 1);
-                            alert(`Đã thêm ${p.name} với giá Flash Sale đặc biệt vào giỏ hàng!`);
-                          }}
-                          className="w-full py-2.5 bg-gradient-to-r from-red-500 to-orange-600 text-white font-extrabold text-xs rounded-2xl hover:shadow-md cursor-pointer active:scale-[0.98] transition-all text-center"
-                        >
-                          🔥 Đặt Giao Tốc Hành
-                        </button>
-                      </div>
-
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </section>
 
@@ -499,7 +515,7 @@ export default function App() {
                     {/* Price and Add button area */}
                     <div className="p-4 pt-2 border-t border-stone-50 flex items-end justify-between text-left">
                       <div>
-                        <span className="text-[10px] font-semibold text-stone-350 block mb-0.5">Hộp 900g</span>
+                        <span className="text-[10px] font-semibold text-stone-350 block mb-0.5">{p.weight || "Hộp 900g"}</span>
                         <span className="text-xs font-mono font-black text-amber-500">
                           {p.price.toLocaleString('vi-VN')}đ
                         </span>
@@ -561,7 +577,7 @@ export default function App() {
                     {/* Price and Add button area */}
                     <div className="p-4 pt-2 border-t border-stone-50 flex items-end justify-between text-left">
                       <div>
-                        <span className="text-[10px] font-semibold text-stone-350 block mb-0.5">Hộp 900g</span>
+                        <span className="text-[10px] font-semibold text-stone-350 block mb-0.5">{p.weight || "Hộp 900g"}</span>
                         <span className="text-xs font-mono font-black text-amber-500">
                           {p.price.toLocaleString('vi-VN')}đ
                         </span>
