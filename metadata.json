@@ -1,0 +1,6 @@
+{
+  "name": "Cửa hàng Sữa Bột Thiên Đường Sữa",
+  "description": "Website bán hàng sữa bột dinh dưỡng cho trẻ em và người lớn, đầy đủ tính năng giỏ hàng, đặt hàng, quản trị và Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

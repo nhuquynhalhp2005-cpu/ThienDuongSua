@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information, including roles and contact info.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user credentials identifier from Firebase Authentication."
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin"],
+          "description": "User access level, restricting admin actions to admins."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Shipping or billing address."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of user account creation."
+        }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
+    "Product": {
+      "title": "Product Item",
+      "description": "Liquid or powdered milk products catalog details.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the product."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the powdered milk brand or item."
+        },
+        "price": {
+          "type": "number",
+          "description": "Retail price of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the milk benefits."
+        },
+        "brand": {
+          "type": "string",
+          "description": "Manufacturer or brand name."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["children", "adults", "seniors", "pregnant"],
+          "description": "Target demographics or categories."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Image URL of the product container."
+        },
+        "stock": {
+          "type": "number",
+          "description": "Available stock quantity."
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Flag to mark the product as highly recommended."
+        },
+        "isNew": {
+          "type": "boolean",
+          "description": "Flag to mark newly arrived products."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Product directory registration timestamp."
+        }
+      },
+      "required": ["name", "price", "brand", "category", "stock"]
+    },
+    "Order": {
+      "title": "Purchase Order",
+      "description": "Order submitted by a user contains milk items purchased, totaling, and shipping.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique order identifier."
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the purchaser who triggered the shopping action."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Recipient full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Recipient contact email."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Recipient contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Shipping absolute location."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment preference, e.g. COD or Bank Transfer."
+        },
+        "items": {
+          "type": "array",
+          "description": "Purchased item arrays with prices and quantities."
+        },
+        "total": {
+          "type": "number",
+          "description": "Complete payment amount in VND."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"],
+          "description": "Current execution milestone status label."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp on checkout triggers."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Latest stage update timestamps."
+        }
+      },
+      "required": ["userId", "customerName", "phone", "address", "items", "total", "status"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of milk products."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User registration profiles."
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Placed user purchase records."
+    }
+  }
+}

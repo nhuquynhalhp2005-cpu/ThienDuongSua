@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "nhuquynhalhp2005@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity Schema Validators
+    function isValidProduct(p) {
+      return p.name is string && p.name.size() > 0 && p.name.size() <= 200 &&
+        p.price is number && p.price >= 0 &&
+        p.brand is string && p.brand.size() > 0 && p.brand.size() <= 100 &&
+        p.category is string && (p.category == "children" || p.category == "adults" || p.category == "seniors" || p.category == "pregnant") &&
+        p.stock is number && p.stock >= 0 &&
+        (p.imageUrl == null || (p.imageUrl is string && p.imageUrl.size() <= 2000)) &&
+        p.featured is bool && p.isNew is bool;
+    }
+
+    function isValidUser(u) {
+      return u.uid == request.auth.uid &&
+        u.email is string && u.email.size() > 0 && u.email.size() <= 200 &&
+        u.displayName is string && u.displayName.size() > 0 && u.displayName.size() <= 200 &&
+        (u.phone == null || (u.phone is string && u.phone.size() <= 20)) &&
+        (u.address == null || (u.address is string && u.address.size() <= 500));
+    }
+
+    function isValidOrder(o) {
+      return o.userId == request.auth.uid &&
+        o.customerName is string && o.customerName.size() > 0 && o.customerName.size() <= 200 &&
+        o.phone is string && o.phone.size() >= 8 && o.phone.size() <= 20 &&
+        o.address is string && o.address.size() > 0 && o.address.size() <= 500 &&
+        o.total is number && o.total >= 0 &&
+        o.status is string && (o.status == "Pending" || o.status == "Confirmed" || o.status == "Shipping" || o.status == "Delivered" || o.status == "Cancelled") &&
+        o.items is list && o.items.size() > 0 && o.items.size() <= 100;
+    }
+
+    /// Match Blocks
+
+    // Products collection: Read by everyone, Admin edits only
+    match /products/{productId} {
+      allow read, list: if true;
+      allow create, update: if isAdmin() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Users collection: Strict ownership or Admin oversight
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      
+      allow create: if isSignedIn() && request.auth.uid == userId && 
+        request.resource.data.role == "user" && isValidUser(request.resource.data);
+
+      allow update: if (
+        // Case A: User self-update without escalating privilege
+        (isSignedIn() && request.auth.uid == userId && 
+         request.resource.data.role == resource.data.role && 
+         request.resource.data.email == resource.data.email && 
+         isValidUser(request.resource.data) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'phone', 'address', 'updatedAt'])) ||
+        // Case B: Admin modification
+        isAdmin()
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    // Orders collection: Placed by user, viewed by user or admin, managed by admin
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && 
+        isValidOrder(request.resource.data) && 
+        request.resource.data.status == "Pending";
+
+      allow update: if (
+        // Case A: Regular customer cancels their pending order
+        (isSignedIn() && resource.data.userId == request.auth.uid && 
+         resource.data.status == "Pending" && 
+         request.resource.data.status == "Cancelled" &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'items', 'customerName', 'phone', 'address', 'total', 'userId', 'paymentMethod'])) ||
+        // Case B: Admin updates order details or status
+        isAdmin()
+      );
+      
+      allow delete: if isAdmin();
+    }
+  }
+}
