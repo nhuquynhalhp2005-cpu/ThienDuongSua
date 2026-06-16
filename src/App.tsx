@@ -589,6 +589,7 @@ export default function App() {
               onRemoveItem={handleRemoveCartItem}
               onClearCart={handleClearCart}
               user={user}
+              orders={orders}
               onOpenAuth={() => setAuthOpen(true)}
               onOrderCompleted={() => setActiveTab('orders')}
             />
