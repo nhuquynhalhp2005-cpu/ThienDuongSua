@@ -52,8 +52,9 @@ export default function ShopView({ products, onAddToCart, initialCategoryFilter,
     }
   };
 
-  // Brands present in initial state
-  const brands = ['all', 'Abbott', 'Meiji', 'Vinamilk', 'Anlene', 'Friso'];
+  // Brands present in initial state - derived dynamically
+  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort();
+  const brands = ['all', ...uniqueBrands];
 
   // Handle Filtering core logic
   const filteredProducts = products.filter((p) => {
@@ -165,14 +166,12 @@ export default function ShopView({ products, onAddToCart, initialCategoryFilter,
             <select
               value={brandFilter}
               onChange={(e) => setBrandFilter(e.target.value)}
-              className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-200 bg-white"
+              className="w-full px-3 py-2.5 text-xs rounded-xl border border-stone-200 bg-white capitalize"
             >
-              <option value="all">Tất cả thương hiệu nổi bật</option>
-              <option value="Abbott">Abbott Hoa Kỳ</option>
-              <option value="Meiji">Meiji Nhật Bản</option>
-              <option value="Vinamilk">Vinamilk Việt Nam</option>
-              <option value="Anlene">Anlene Hồng Kông</option>
-              <option value="Friso">Friso Hà Lan</option>
+              <option value="all">Tất cả thương hiệu nổi bật ({uniqueBrands.length})</option>
+              {uniqueBrands.map((brandName) => (
+                <option key={brandName} value={brandName}>{brandName}</option>
+              ))}
             </select>
           </div>
 

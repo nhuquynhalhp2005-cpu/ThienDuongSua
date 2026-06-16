@@ -477,17 +477,30 @@ export default function AdminPanel({
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-stone-400 uppercase">Hãng sản xuất *</label>
-                  <select
+                  <input
+                    type="text"
+                    list="brands-datalist"
                     value={prodBrand}
                     onChange={(e) => setProdBrand(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-white"
-                  >
-                    <option value="Abbott">Abbott</option>
-                    <option value="Meiji">Meiji</option>
-                    <option value="Vinamilk">Vinamilk</option>
-                    <option value="Anlene">Anlene</option>
-                    <option value="Friso">Friso</option>
-                  </select>
+                    placeholder="Nhập hoặc chọn hãng sản xuất (ví dụ: Abbott, Vinamilk...)"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 outline-none text-left bg-white font-medium"
+                    required
+                  />
+                  <datalist id="brands-datalist">
+                    <option value="Abbott" />
+                    <option value="Meiji" />
+                    <option value="Vinamilk" />
+                    <option value="Anlene" />
+                    <option value="Friso" />
+                    <option value="Nutifood" />
+                    <option value="Aptamil" />
+                    <option value="Nestlé" />
+                    <option value="TH true MILK" />
+                    <option value="Enfamil" />
+                    <option value="Similac" />
+                    <option value="Hikid" />
+                    <option value="ColosBaby" />
+                  </datalist>
                 </div>
 
                 <div className="space-y-1.5">
