@@ -491,8 +491,13 @@ export default function ShopView({ products, onAddToCart, initialCategoryFilter,
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                  {products
+                  {[...products]
                     .filter((p) => p.id !== selectedProduct.id)
+                    .sort((a, b) => {
+                      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                      return dateB - dateA;
+                    })
                     .slice(0, 4)
                     .map((p) => (
                       <div
