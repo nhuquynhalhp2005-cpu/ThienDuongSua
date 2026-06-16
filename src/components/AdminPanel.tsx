@@ -3,7 +3,7 @@ import {
   Plus, Edit3, Trash2, FolderSync, DollarSign, Package, ShoppingBag, 
   Users, Check, X, ShieldAlert, Sparkles, Filter, Search, Eye, Settings, FileText
 } from 'lucide-react';
-import { Product, Order, UserProfile, MilkCategory, SystemSettings, Slide } from '../types';
+import { Product, Order, UserProfile, MilkCategory, SystemSettings, Slide, HomeCategorySetting } from '../types';
 import { 
   addProduct, updateProduct, deleteProduct, 
   updateOrderStatus, updateUserRole, saveSystemSettings
@@ -38,6 +38,42 @@ export default function AdminPanel({
   // Slide state bindings
   const [slides, setSlides] = useState<Slide[]>(settings?.bannerSlides || []);
 
+  // Homepage custom categories state bindings
+  const [homeCategoryTitle, setHomeCategoryTitle] = useState(settings?.homeCategoryTitle || "Chọn sữa bột phù hợp lứa tuổi");
+  const [homeCategorySubtitle, setHomeCategorySubtitle] = useState(settings?.homeCategorySubtitle || "Mỗi độ tuổi có một nhu cầu năng lượng riêng. Chọn đúng phân khúc sữa bột để hấp thu tối ưu nhất.");
+  const [homeCategories, setHomeCategories] = useState<HomeCategorySetting[]>(
+    settings?.homeCategories || [
+      {
+        key: 'children',
+        title: "Sữa Cho Bé Yêu",
+        subtitle: "Hỗ trợ phát triển chiều cao, IQ trí não",
+        desc: "Thanh mát dễ tiêu hoá, dồi dào HMO, DHA và kháng thể sữa non đặc hiệu.",
+        image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400&auto=format&fit=crop"
+      },
+      {
+        key: 'adults',
+        title: "Người Trưởng Thành",
+        subtitle: "Tăng cường sức đề kháng bền bỉ",
+        desc: "Nạp đạm, vitamin nhóm B dồi dào thúc đẩy trao đổi chất bảo vệ hoạt động hàng ngày.",
+        image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&auto=format&fit=crop"
+      },
+      {
+        key: 'seniors',
+        title: "Người Lớn Tuổi",
+        subtitle: "Bảo vệ xương khớp vững chãi dẻo dai",
+        desc: "Bổ sung canxi Nano hữu cơ giúp ngừa loãng xương, bảo vệ trái tim khoẻ mạnh dẻo dải.",
+        image: "https://images.unsplash.com/photo-1527018601619-a508a2be00cd?w=400&auto=format&fit=crop"
+      },
+      {
+        key: 'pregnant',
+        title: "Mẹ Bầu Dưỡng Thai",
+        subtitle: "Thai nhi khoẻ mạnh, mẹ bầu rạng rỡ",
+        desc: "Bổ sung Axit Folic, Sắt và Vitamin gảm triệu chứng ốm nghén ở phụ nữ mang thai.",
+        image: "https://images.unsplash.com/photo-1531983412531-1f49a365f69a?w=400&auto=format&fit=crop"
+      }
+    ]
+  );
+
   // Sync state if settings prop changes (e.g. on load)
   useEffect(() => {
     if (settings) {
@@ -49,6 +85,11 @@ export default function AdminPanel({
       setEmailValue(settings.email);
       setFooterTextVal(settings.footerText);
       setSlides(settings.bannerSlides || []);
+      setHomeCategoryTitle(settings.homeCategoryTitle || "Chọn sữa bột phù hợp lứa tuổi");
+      setHomeCategorySubtitle(settings.homeCategorySubtitle || "Mỗi độ tuổi có một nhu cầu năng lượng riêng. Chọn đúng phân khúc sữa bột để hấp thu tối ưu nhất.");
+      if (settings.homeCategories && settings.homeCategories.length > 0) {
+        setHomeCategories(settings.homeCategories);
+      }
     }
   }, [settings]);
 
@@ -62,7 +103,10 @@ export default function AdminPanel({
       phone: phoneValue,
       email: emailValue,
       footerText: footerTextVal,
-      bannerSlides: slides
+      bannerSlides: slides,
+      homeCategoryTitle,
+      homeCategorySubtitle,
+      homeCategories
     };
 
     try {
@@ -897,6 +941,105 @@ export default function AdminPanel({
                 className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none"
                 placeholder="Dòng chữ bản quyền dưới đáy trang"
               />
+            </div>
+          </div>
+
+          {/* 4 Premium Category Cards Manager */}
+          <div className="bg-white p-6 rounded-3xl border border-stone-150 shadow-sm space-y-6">
+            <h3 className="text-sm font-black text-stone-850 uppercase tracking-widest flex items-center gap-2 pb-3 border-b border-stone-100">
+              <Sparkles className="w-5 h-5 text-sky-500" />
+              <span>Quản Lý 4 Phân Khúc / Lứa Tuổi Trang Chủ</span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Tiêu Đề Lớn Phần Lứa Tuổi</label>
+                <input
+                  type="text"
+                  value={homeCategoryTitle}
+                  onChange={(e) => setHomeCategoryTitle(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none font-bold focus:border-sky-450 focus:ring-1 focus:ring-sky-450 text-stone-800"
+                  placeholder="Chọn sữa bột phù hợp lứa tuổi"
+                />
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Mô tả phụ nhỏ sau tiêu đề</label>
+                <input
+                  type="text"
+                  value={homeCategorySubtitle}
+                  onChange={(e) => setHomeCategorySubtitle(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none focus:border-sky-450 focus:ring-1 focus:ring-sky-450 text-stone-800"
+                  placeholder="Mô tả phụ cho mục phân khúc tuổi..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-3">
+              {homeCategories.map((cat, idx) => {
+                let friendlyCategory = "Trẻ em (children)";
+                if (cat.key === 'adults') friendlyCategory = "Người trưởng thành (adults)";
+                if (cat.key === 'seniors') friendlyCategory = "Người lớn tuổi (seniors)";
+                if (cat.key === 'pregnant') friendlyCategory = "Mẹ bầu dưỡng thai (pregnant)";
+
+                const handleFieldChange = (field: keyof HomeCategorySetting, val: string) => {
+                  const updated = [...homeCategories];
+                  updated[idx] = { ...updated[idx], [field]: val };
+                  setHomeCategories(updated);
+                };
+
+                return (
+                  <div key={cat.key} className="p-5 rounded-3xl border border-stone-150 bg-stone-50/40 space-y-4">
+                    <div className="flex justify-between items-center pb-2 border-b border-stone-100">
+                      <span className="text-[10px] font-black text-stone-600 uppercase tracking-widest bg-stone-200/50 px-2 py-0.5 rounded-lg border border-stone-300/30">
+                        {friendlyCategory}
+                      </span>
+                      <span className="text-[9px] font-bold text-stone-400 font-mono uppercase">Key: {cat.key}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Tiêu đề Thẻ</label>
+                        <input
+                          type="text"
+                          value={cat.title}
+                          onChange={(e) => handleFieldChange('title', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold rounded-lg border border-stone-200 bg-white outline-none focus:border-sky-400 text-stone-800"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Tiêu đề Phụ / Slogan</label>
+                        <input
+                          type="text"
+                          value={cat.subtitle}
+                          onChange={(e) => handleFieldChange('subtitle', e.target.value)}
+                          className="w-full px-3 py-2 text-xs rounded-lg border border-stone-200 bg-white outline-none focus:border-sky-400 text-stone-800"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Mô tả chi tiết</label>
+                      <textarea
+                        rows={2}
+                        value={cat.desc}
+                        onChange={(e) => handleFieldChange('desc', e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-stone-200 bg-white outline-none focus:border-sky-400 resize-none text-stone-850 leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Đường dẫn hình ảnh (icon vuông)</label>
+                      <input
+                        type="text"
+                        value={cat.image}
+                        onChange={(e) => handleFieldChange('image', e.target.value)}
+                        className="w-full px-3 py-2 text-[11px] rounded-lg border border-stone-200 bg-white outline-none focus:border-sky-400 font-mono text-stone-600"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

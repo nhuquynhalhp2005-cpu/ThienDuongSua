@@ -35,6 +35,14 @@ export interface Slide {
   image: string;
 }
 
+export interface HomeCategorySetting {
+  key: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  image: string;
+}
+
 export interface SystemSettings {
   brandName: string;
   logoChar: string;
@@ -44,6 +52,9 @@ export interface SystemSettings {
   email: string;
   footerText: string;
   bannerSlides: Slide[];
+  homeCategoryTitle?: string;
+  homeCategorySubtitle?: string;
+  homeCategories?: HomeCategorySetting[];
 }
 
 export interface CartItem {

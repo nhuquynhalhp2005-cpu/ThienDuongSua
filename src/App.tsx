@@ -288,12 +288,16 @@ export default function App() {
             <section className="space-y-6">
               <div className="text-center space-y-2">
                 <span className="text-[10px] font-black tracking-widest text-primary-500 uppercase">TIÊU CHUẨN DINH DƯỠNG</span>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-stone-850 tracking-tight">Chọn sữa bột phù hợp lứa tuổi</h3>
-                <p className="text-xs text-stone-400 max-w-md mx-auto">Mỗi độ tuổi có một nhu cầu năng lượng riêng. Chọn đúng phân khúc sữa bột để hấp thu tối ưu nhất.</p>
+                <h3 className="text-2xl md:text-3xl font-extrabold text-stone-850 tracking-tight">
+                  {settings.homeCategoryTitle || "Chọn sữa bột phù hợp lứa tuổi"}
+                </h3>
+                <p className="text-xs text-stone-400 max-w-md mx-auto">
+                  {settings.homeCategorySubtitle || "Mỗi độ tuổi có một nhu cầu năng lượng riêng. Chọn đúng phân khúc sữa bột để hấp thu tối ưu nhất."}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
+                {(settings.homeCategories || [
                   {
                     key: 'children',
                     title: "Sữa Cho Bé Yêu",
@@ -326,18 +330,24 @@ export default function App() {
                     color: "border-pink-100 hover:border-pink-400 bg-pink-50/20 text-pink-600",
                     image: "https://images.unsplash.com/photo-1531983412531-1f49a365f69a?w=400&auto=format&fit=crop"
                   }
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    onClick={() => handleHomeCategoryClick(item.key)}
-                    className={`p-6 rounded-2xl border text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-200/50 ${item.color}`}
-                  >
-                    <img src={item.image} className="w-14 h-14 object-cover rounded-xl border mb-3" alt="" />
-                    <h4 className="text-base font-extrabold text-stone-850 leading-tight">{item.title}</h4>
-                    <p className="text-[11px] font-bold text-stone-500 mt-0.5 leading-none">{item.subtitle}</p>
-                    <p className="text-[11px] text-stone-400 leading-relaxed mt-2.5">{item.desc}</p>
-                  </div>
-                ))}
+                ]).map((item) => {
+                  let colorClass = "border-sky-100 hover:border-sky-400 bg-sky-50/20 text-sky-600";
+                  if (item.key === 'adults') colorClass = "border-teal-100 hover:border-teal-400 bg-teal-50/20 text-teal-600";
+                  if (item.key === 'seniors') colorClass = "border-amber-100 hover:border-amber-400 bg-amber-50/20 text-amber-600";
+                  if (item.key === 'pregnant') colorClass = "border-pink-100 hover:border-pink-400 bg-pink-50/20 text-pink-600";
+                  return (
+                    <div
+                      key={item.key}
+                      onClick={() => handleHomeCategoryClick(item.key)}
+                      className={`p-6 rounded-2xl border text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-200/50 ${colorClass}`}
+                    >
+                      <img src={item.image} className="w-14 h-14 object-cover rounded-xl border mb-3" alt="" referrerPolicy="no-referrer" />
+                      <h4 className="text-base font-extrabold text-stone-850 leading-tight">{item.title}</h4>
+                      <p className="text-[11px] font-bold text-stone-500 mt-0.5 leading-none">{item.subtitle}</p>
+                      <p className="text-[11px] text-stone-400 leading-relaxed mt-2.5">{item.desc}</p>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 

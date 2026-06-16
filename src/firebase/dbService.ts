@@ -319,6 +319,38 @@ export const DEFAULT_SETTINGS: SystemSettings = {
       bgGradient: "from-teal-500 to-emerald-700",
       image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600&auto=format&fit=crop&q=60"
     }
+  ],
+  homeCategoryTitle: "Chọn sữa bột phù hợp lứa tuổi",
+  homeCategorySubtitle: "Mỗi độ tuổi có một nhu cầu năng lượng riêng. Chọn đúng phân khúc sữa bột để hấp thu tối ưu nhất.",
+  homeCategories: [
+    {
+      key: 'children',
+      title: "Sữa Cho Bé Yêu",
+      subtitle: "Hỗ trợ phát triển chiều cao, IQ trí não",
+      desc: "Thanh mát dễ tiêu hoá, dồi dào HMO, DHA và kháng thể sữa non đặc hiệu.",
+      image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=400&auto=format&fit=crop"
+    },
+    {
+      key: 'adults',
+      title: "Người Trưởng Thành",
+      subtitle: "Tăng cường sức đề kháng bền bỉ",
+      desc: "Nạp đạm, vitamin nhóm B dồi dào thúc đẩy trao đổi chất bảo vệ hoạt động hàng ngày.",
+      image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&auto=format&fit=crop"
+    },
+    {
+      key: 'seniors',
+      title: "Người Lớn Tuổi",
+      subtitle: "Bảo vệ xương khớp vững chãi dẻo dai",
+      desc: "Bổ sung canxi Nano hữu cơ giúp ngừa loãng xương, bảo vệ trái tim khoẻ mạnh dẻo dải.",
+      image: "https://images.unsplash.com/photo-1527018601619-a508a2be00cd?w=400&auto=format&fit=crop"
+    },
+    {
+      key: 'pregnant',
+      title: "Mẹ Bầu Dưỡng Thai",
+      subtitle: "Thai nhi khoẻ mạnh, mẹ bầu rạng rỡ",
+      desc: "Bổ sung Axit Folic, Sắt và Vitamin gảm triệu chứng ốm nghén ở phụ nữ mang thai.",
+      image: "https://images.unsplash.com/photo-1531983412531-1f49a365f69a?w=400&auto=format&fit=crop"
+    }
   ]
 };
 
