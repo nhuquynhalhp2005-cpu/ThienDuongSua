@@ -8,6 +8,7 @@ interface NavbarProps {
   user: UserProfile | null;
   onLogout: () => void;
   onOpenAuth: () => void;
+  onOpenSettings: () => void;
   cartCount: number;
   isDemoMode: boolean;
   settings?: SystemSettings;
@@ -19,6 +20,7 @@ export default function Navbar({
   user,
   onLogout,
   onOpenAuth,
+  onOpenSettings,
   cartCount,
   isDemoMode,
   settings
@@ -151,16 +153,32 @@ export default function Navbar({
 
             {user ? (
               <div className="flex items-center gap-3">
-                {/* Visual Avatar Name Badge */}
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-bold text-stone-800">{user.displayName}</span>
-                  <span className="text-[10px] font-semibold text-stone-400 capitalize">
-                    {user.role === 'admin' ? '👑 Quản trị viên' : 'Thành viên'}
-                  </span>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-extrabold text-sm flex items-center justify-center uppercase shadow-sm">
-                  {user.displayName.charAt(0)}
-                </div>
+                {/* Visual Avatar Name Badge & clickable Settings icon wrapper */}
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="flex items-center gap-2 text-left hover:bg-stone-50 p-1.5 rounded-2xl border border-transparent hover:border-stone-100 transition-all active:scale-95 text-stone-700"
+                  title="Cài đặt tài khoản"
+                >
+                  <div className="hidden sm:flex flex-col text-right">
+                    <span className="text-xs font-black text-stone-850 leading-tight">{user.displayName}</span>
+                    <span className="text-[10px] font-semibold text-stone-400 capitalize hover:text-sky-600">
+                      {user.role === 'admin' ? '👑 Quản trị viên' : '⚙️ Cài đặt'}
+                    </span>
+                  </div>
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName}
+                      className="w-9 h-9 rounded-full object-cover border border-amber-300 shadow-sm"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-extrabold text-sm flex items-center justify-center uppercase shadow-sm">
+                      {user.displayName.charAt(0)}
+                    </div>
+                  )}
+                </button>
                 
                 {/* Sign Out Trigger */}
                 <button

@@ -21,6 +21,7 @@ import AuthModal from './components/AuthModal';
 import ShopView from './components/ShopView';
 import CartView from './components/CartView';
 import AdminPanel from './components/AdminPanel';
+import UserSettingsModal from './components/UserSettingsModal';
 
 import { 
   Heart, ShieldCheck, Truck, Star, Award, MapPin, 
@@ -59,6 +60,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'shop' | 'cart' | 'orders' | 'admin'>('home');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [userSettingsOpen, setUserSettingsOpen] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   // System Configuration settings state
@@ -239,6 +241,11 @@ export default function App() {
     loadData();
   };
 
+  const handleUpdateUserSuccess = (updatedUser: UserProfile) => {
+    setUser(updatedUser);
+    loadData();
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -269,6 +276,7 @@ export default function App() {
         user={user} 
         onLogout={handleLogout} 
         onOpenAuth={() => setAuthOpen(true)} 
+        onOpenSettings={() => setUserSettingsOpen(true)}
         cartCount={cartItemsCount}
         isDemoMode={isDemoMode}
         settings={settings}
@@ -793,6 +801,15 @@ export default function App() {
         onClose={() => setAuthOpen(false)}
         onAuthSuccess={handleAuthSuccess}
       />
+
+      {user && (
+        <UserSettingsModal
+          isOpen={userSettingsOpen}
+          onClose={() => setUserSettingsOpen(false)}
+          user={user}
+          onUpdateSuccess={handleUpdateUserSuccess}
+        />
+      )}
 
     </div>
   );

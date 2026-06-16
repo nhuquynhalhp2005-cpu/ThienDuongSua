@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User, MapPin, Phone, Sparkles, Shield, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Mail, Lock, User, MapPin, Phone, Sparkles, Shield, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { auth, googleProvider } from '../firebase/config';
 import { 
   signInWithEmailAndPassword, 
@@ -29,6 +29,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,6 +41,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   const handleReset = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleTabChange = (newTab: AuthTab) => {
@@ -118,39 +122,73 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       console.warn("Firebase Auth error, checking fallback admin and local login:", err);
       const isSystemAdmin = email.trim().toLowerCase() === 'nhuquynhalhp2005@gmail.com';
       const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
-      const matchingUser = localUsers.find((u: any) => u.email.trim().toLowerCase() === email.trim().toLowerCase());
+      const matchingUserIndex = localUsers.findIndex((u: any) => u.email.trim().toLowerCase() === email.trim().toLowerCase());
+      const matchingUser = matchingUserIndex !== -1 ? localUsers[matchingUserIndex] : null;
+
+      const errCode = err?.code || "";
+      if (errCode === "auth/wrong-password" || errCode === "auth/invalid-credential") {
+        setErrorMessage("Mật khẩu không chính xác. Vui lòng thử lại.");
+        return;
+      }
 
       if (isSystemAdmin) {
         // Ultimate admin bypass - Allows admin login with email/password even if Firebase email login is disabled
-        const adminProfile: UserProfile = matchingUser || {
-          uid: "admin-fallback-uid-999",
-          email: "nhuquynhalhp2005@gmail.com",
-          displayName: "Như Quỳnh",
-          role: "admin",
-          phone: "0912678987",
-          address: "Hải Phòng",
-          createdAt: new Date().toISOString()
-        };
-        
-        adminProfile.role = "admin";
-        if (!matchingUser) {
+        if (matchingUser) {
+          if (matchingUser.password && matchingUser.password !== password) {
+            setErrorMessage("Mật khẩu admin không chính xác. Vui lòng thử lại.");
+            return;
+          } else if (!matchingUser.password) {
+            // Establish password on first usage of password-less fallback
+            matchingUser.password = password;
+            localUsers[matchingUserIndex] = matchingUser;
+            localStorage.setItem('milkshop_users', JSON.stringify(localUsers));
+          }
+          
+          setSuccessMessage("Đăng nhập với quyền Admin thành công!");
+          setTimeout(() => {
+            onAuthSuccess(matchingUser);
+            onClose();
+          }, 1000);
+        } else {
+          // No local matching user yet, create local admin with the inputted password
+          const adminProfile: UserProfile = {
+            uid: "admin-fallback-uid-999",
+            email: "nhuquynhalhp2005@gmail.com",
+            displayName: "Như Quỳnh",
+            role: "admin",
+            phone: "0912678987",
+            address: "Hải Phòng",
+            createdAt: new Date().toISOString(),
+            password: password // Established now!
+          };
+          
           localUsers.push(adminProfile);
+          localStorage.setItem('milkshop_users', JSON.stringify(localUsers));
+
+          setSuccessMessage("Đăng nhập với quyền Admin thành công!");
+          setTimeout(() => {
+            onAuthSuccess(adminProfile);
+            onClose();
+          }, 1000);
+        }
+      } else if (matchingUser) {
+        if (matchingUser.password && matchingUser.password !== password) {
+          setErrorMessage("Mật khẩu không chính xác. Vui lòng thử lại.");
+          return;
+        } else if (!matchingUser.password) {
+          // Establish password on first usage
+          matchingUser.password = password;
+          localUsers[matchingUserIndex] = matchingUser;
           localStorage.setItem('milkshop_users', JSON.stringify(localUsers));
         }
 
-        setSuccessMessage("Đăng nhập với quyền Admin thành công!");
-        setTimeout(() => {
-          onAuthSuccess(adminProfile);
-          onClose();
-        }, 1000);
-      } else if (matchingUser) {
         setSuccessMessage("Đăng nhập thành công!");
         setTimeout(() => {
           onAuthSuccess(matchingUser);
           onClose();
         }, 1000);
       } else {
-        setErrorMessage("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+        setErrorMessage("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.");
       }
     } finally {
       setLoading(false);
@@ -205,7 +243,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
           role: isSystemAdmin ? 'admin' : 'user',
           phone,
           address,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          password: password
         };
 
         const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
@@ -352,13 +391,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Nhập tối thiểu 6 chữ số"
-                    className="w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-50 text-left font-medium"
+                    className="w-full pl-11 pr-11 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-50 text-left font-medium"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus:outline-none p-1 rounded-md transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4.5 h-4.5" />
+                    ) : (
+                      <Eye className="w-4.5 h-4.5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -458,13 +508,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Tối thiểu 6 ký tự"
-                      className="w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 text-left"
+                      className="w-full pl-11 pr-11 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 text-left font-medium"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus:outline-none p-1 rounded-md transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -473,13 +534,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Nhập lại mật khẩu"
-                      className="w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 text-left"
+                      className="w-full pl-11 pr-11 py-3 text-sm rounded-xl border border-stone-200 outline-none focus:border-primary-500 text-left font-medium"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 focus:outline-none p-1 rounded-md transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

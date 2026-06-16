@@ -22,6 +22,8 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   createdAt?: string;
+  password?: string;
+  photoURL?: string;
 }
 
 export interface Slide {

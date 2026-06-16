@@ -51,3 +51,10 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+/* Hide native Edge / IE eye icon in type="password" fields since we have our custom one */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
