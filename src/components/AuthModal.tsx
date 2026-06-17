@@ -60,19 +60,22 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       
       // Check if user profile already exists
       let profile = await getUserProfile(user.uid);
+      const emailLower = (user.email || '').trim().toLowerCase();
+      const isSystemAdmin = emailLower === 'nhuquynhalhp2005@gmail.com' || emailLower === 'nhuquynhalhp25@gmail.com';
+
       if (!profile) {
         // Create new profile for Google users
         profile = {
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || 'Khách hàng Google',
-          role: user.email === 'nhuquynhalhp2005@gmail.com' ? 'admin' : 'user', // Bootstrap Admin first
+          role: isSystemAdmin ? 'admin' : 'user', // Bootstrap Admin first
           phone: '',
           address: '',
           createdAt: new Date().toISOString()
         };
         await saveUserProfile(profile);
-      } else if (user.email === 'nhuquynhalhp2005@gmail.com' && (profile.role !== 'admin' || profile.displayName !== 'Như Quỳnh')) {
+      } else if (isSystemAdmin && (profile.role !== 'admin' || profile.displayName !== 'Như Quỳnh')) {
         profile.role = 'admin';
         profile.displayName = 'Như Quỳnh';
         await saveUserProfile(profile);
@@ -118,13 +121,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       const user = userCredential.user;
       
       let profile = await getUserProfile(user.uid);
+      const emailLower = (user.email || '').trim().toLowerCase();
+      const isSystemAdmin = emailLower === 'nhuquynhalhp2005@gmail.com' || emailLower === 'nhuquynhalhp25@gmail.com';
+
       if (!profile) {
         // Fallback profile if Firestore entry not found but Auth user exists
         profile = {
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || 'Thành viên cũ',
-          role: user.email === 'nhuquynhalhp2005@gmail.com' ? 'admin' : 'user',
+          role: isSystemAdmin ? 'admin' : 'user',
           createdAt: new Date().toISOString()
         };
         await saveUserProfile(profile);
@@ -137,7 +143,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       }, 1000);
     } catch (err: any) {
       console.warn("Firebase Auth error, checking fallback admin and local login:", err);
-      const isSystemAdmin = email.trim().toLowerCase() === 'nhuquynhalhp2005@gmail.com';
+      const isSystemAdmin = email.trim().toLowerCase() === 'nhuquynhalhp2005@gmail.com' || email.trim().toLowerCase() === 'nhuquynhalhp25@gmail.com';
       const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
       const matchingUserIndex = localUsers.findIndex((u: any) => u.email.trim().toLowerCase() === email.trim().toLowerCase());
       const matchingUser = matchingUserIndex !== -1 ? localUsers[matchingUserIndex] : null;

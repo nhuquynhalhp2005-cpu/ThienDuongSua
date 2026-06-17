@@ -14,7 +14,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == "nhuquynhalhp2005@gmail.com" ||
+        request.auth.token.email.matches('(?i)^(nhuquynhalhp2005|nhuquynhalhp25)@gmail\\.com$') ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
       );
@@ -68,7 +68,8 @@ service cloud.firestore {
       allow list: if isAdmin();
       
       allow create: if isSignedIn() && request.auth.uid == userId && 
-        request.resource.data.role == "user" && isValidUser(request.resource.data);
+        isValidUser(request.resource.data) &&
+        (request.resource.data.role == "user" || (request.resource.data.role == "admin" && request.auth.token.email.matches('(?i)^(nhuquynhalhp2005|nhuquynhalhp25)@gmail\\.com$')));
 
       allow update: if (
         // Case A: User self-update without escalating privilege

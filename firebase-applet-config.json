@@ -1,10 +1,10 @@
 {
   "projectId": "thienduongsua-1c34b",
-  "appId": "1:219160547444:web:a6f062cc03964517b24121",
+  "appId": "1:219160547444:web:a690e3f9b9f2d4b0b24121",
   "apiKey": "AIzaSyC4-3YHU11wv7Ev1wTrDcVmfWYW2y-PF0w",
   "authDomain": "thienduongsua-1c34b.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
+  "firestoreDatabaseId": "ai-studio-2091cb96-5d01-41c1-a253-49cfce688f2c",
   "storageBucket": "thienduongsua-1c34b.firebasestorage.app",
   "messagingSenderId": "219160547444",
-  "measurementId": "G-HLEV22JQNC"
+  "measurementId": ""
 }

@@ -110,7 +110,15 @@ export default function App() {
         setIsDemoMode(false);
         try {
           const profile = await getUserProfile(firebaseUser.uid);
+          const emailLower = (firebaseUser.email || '').trim().toLowerCase();
+          const isSystemAdmin = emailLower === 'nhuquynhalhp2005@gmail.com' || emailLower === 'nhuquynhalhp25@gmail.com';
+          
           if (profile) {
+            if (isSystemAdmin && (profile.role !== 'admin' || profile.displayName !== 'Như Quỳnh')) {
+              profile.role = 'admin';
+              profile.displayName = 'Như Quỳnh';
+              await saveUserProfile(profile);
+            }
             setUser(profile);
           } else {
             // Self-create user profile as default
@@ -118,7 +126,7 @@ export default function App() {
               uid: firebaseUser.uid,
               email: firebaseUser.email || '',
               displayName: firebaseUser.displayName || 'Thành viên Milk',
-              role: firebaseUser.email === 'nhuquynhalhp2005@gmail.com' ? 'admin' : 'user',
+              role: isSystemAdmin ? 'admin' : 'user',
               createdAt: new Date().toISOString()
             };
             await saveUserProfile(newProfile);

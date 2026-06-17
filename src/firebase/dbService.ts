@@ -26,17 +26,13 @@ const isMockFirebase = () => {
   }
 };
 
-let isFirestoreOffline = false;
-
-// Helper helper to prevent infinite hanging when Firestore is offline or uninitialized
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 1000): Promise<T> {
-  const currentTimeout = isFirestoreOffline ? 80 : timeoutMs;
+// Helper to prevent infinite hanging when Firestore is offline or uninitialized
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> {
   let timeoutId: any;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
-      isFirestoreOffline = true;
-      reject(new Error(`Timeout of ${currentTimeout}ms waiting for Firestore response`));
-    }, currentTimeout);
+      reject(new Error(`Timeout of ${timeoutMs}ms waiting for Firestore response`));
+    }, timeoutMs);
   });
   return Promise.race([
     promise.then((res) => {
@@ -44,10 +40,6 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 1000): Pr
       return res;
     }).catch((err) => {
       if (timeoutId) clearTimeout(timeoutId);
-      const errStr = String(err);
-      if (errStr.includes('offline') || errStr.includes('network') || errStr.includes('failed-precondition') || errStr.includes('permission-denied')) {
-        isFirestoreOffline = true;
-      }
       throw err;
     }),
     timeoutPromise
@@ -63,7 +55,9 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     const docSnap = await withTimeout(getDoc(docRef));
     if (docSnap.exists()) {
       let data = docSnap.data() as UserProfile;
-      if (data.email === 'nhuquynhalhp2005@gmail.com' && (data.role !== 'admin' || data.displayName !== 'Như Quỳnh')) {
+      const emailLower = (data.email || '').trim().toLowerCase();
+      const isSystemAdmin = emailLower === 'nhuquynhalhp2005@gmail.com' || emailLower === 'nhuquynhalhp25@gmail.com';
+      if (isSystemAdmin && (data.role !== 'admin' || data.displayName !== 'Như Quỳnh')) {
         data = {
           ...data,
           role: 'admin',
@@ -79,7 +73,9 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
     const localUser = localUsers.find((u: any) => u.uid === uid);
     if (localUser) {
-      if (localUser.email === 'nhuquynhalhp2005@gmail.com' && (localUser.role !== 'admin' || localUser.displayName !== 'Như Quỳnh')) {
+      const emailLower = (localUser.email || '').trim().toLowerCase();
+      const isSystemAdmin = emailLower === 'nhuquynhalhp2005@gmail.com' || emailLower === 'nhuquynhalhp25@gmail.com';
+      if (isSystemAdmin && (localUser.role !== 'admin' || localUser.displayName !== 'Như Quỳnh')) {
         localUser.role = 'admin';
         localUser.displayName = 'Như Quỳnh';
         localStorage.setItem('milkshop_users', JSON.stringify(localUsers));
@@ -280,7 +276,8 @@ export async function syncLocalProductsToCloud(): Promise<{ successCount: number
     for (const prod of unsyncedProds) {
       const { id, ...rest } = prod;
       try {
-        await withTimeout(addDoc(collection(db, 'products'), rest));
+        // Use a longer timeout of 5000ms for manual sync operation to give it a proper connection attempt
+        await withTimeout(addDoc(collection(db, 'products'), rest), 5000);
         successCount++;
         // Remove from local storage list
         const latestProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
