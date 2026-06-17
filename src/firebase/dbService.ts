@@ -282,7 +282,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 
 export const DEFAULT_SETTINGS: SystemSettings = {
   brandName: "Thiên Đường",
-  logoChar: "T",
+  logoChar: "☁️",
   brandSuffix: "SỮA",
   address: "Cẩm Văn, An Quang, Hải Phòng",
   phone: "1900.8198 (8:00 - 21:00)",

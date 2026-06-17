@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, LogIn, LogOut, User, FolderLock, ShoppingBag, Eye, HelpCircle } from 'lucide-react';
+import { ShoppingCart, LogIn, LogOut, User, FolderLock, ShoppingBag, Eye, HelpCircle, Sparkles } from 'lucide-react';
 import { UserProfile, SystemSettings } from '../types';
 
 interface NavbarProps {
@@ -47,11 +47,44 @@ export default function Navbar({
             onClick={() => setActiveTab('home')} 
             className="flex items-center gap-2 cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-all">
-              {logoChar}
+            <div className="w-11 h-11 rounded-3xl bg-gradient-to-tr from-pink-200 via-amber-100 to-sky-200 flex items-center justify-center shadow-sm border border-white/60 group-hover:scale-115 group-hover:rotate-12 transition-all duration-300 relative select-none">
+              <span className="relative z-10 w-8.5 h-8.5 flex items-center justify-center -translate-y-0.5 filter drop-shadow-[0_2px_4px_rgba(56,189,248,0.15)]">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="60%" stopColor="#f8fafc" />
+                      <stop offset="100%" stopColor="#f0f9ff" />
+                    </linearGradient>
+                  </defs>
+                  {/* Fluffy white cloud body */}
+                  <path
+                    d="M22,72 C12,72 5,64 5,54 C5,45 11,38 19,37 C23,22 37,12 53,12 C67,12 79,22 82,36 C89,38 95,44 95,52 C95,63 87,71 76,71 L22,71 Z"
+                    fill="url(#cloudGrad)"
+                  />
+                  {/* Cute glowing eyes */}
+                  <path d="M 33,45 Q 37,42 41,45" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                  <path d="M 59,45 Q 63,42 67,45" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                  {/* Smiling mouth */}
+                  <path d="M 47,50 Q 50,54 53,50" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                  {/* Blushing cheeks */}
+                  <ellipse cx="29" cy="51" rx="4.5" ry="2.5" fill="#ec4899" opacity="0.45" />
+                  <ellipse cx="71" cy="51" rx="4.5" ry="2.5" fill="#ec4899" opacity="0.45" />
+                </svg>
+              </span>
+              
+              {/* Golden shimmering sparkles reflecting "lấp lánh tinh khôi" */}
+              <div className="absolute -top-1.5 -right-1.5 bg-white text-amber-400 p-0.5 rounded-full shadow-xs border border-amber-100 animate-bounce group-hover:scale-125 transition-all duration-300 z-20">
+                <Sparkles className="w-3.5 h-3.5 fill-amber-300 text-amber-500 animate-pulse" />
+              </div>
+
+              {/* Additional tiny ambient sparkles inside the logo container */}
+              <div className="absolute top-1 left-2.5 w-1.5 h-1.5 bg-white rounded-full animate-ping pointer-events-none" />
+              <div className="absolute bottom-1 right-2.5 w-1 h-1 bg-white rounded-full animate-pulse pointer-events-none" />
+              <div className="absolute inset-0 rounded-3xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-0" />
             </div>
             <div>
-              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-sky-600 to-blue-800 bg-clip-text text-transparent uppercase">
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-sky-600 to-blue-800 bg-clip-text text-transparent uppercase flex items-center gap-1.5">
                 {brandName} <span className="text-amber-500">{brandSuffix}</span>
               </span>
               <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase leading-none mt-0.5">Sữa Bột Dinh Dưỡng</p>

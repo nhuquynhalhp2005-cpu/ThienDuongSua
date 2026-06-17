@@ -909,15 +909,48 @@ export default function AdminPanel({
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="space-y-1.5 text-left">
-                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Logo Viết Tắt (1 Chữ cái)</label>
-                <input
-                  type="text"
-                  maxLength={1}
-                  value={logoChar}
-                  onChange={(e) => setLogoChar(e.target.value)}
-                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-200 outline-none font-extrabold uppercase text-center focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
-                />
+              <div className="space-y-1.5 text-left md:col-span-1">
+                <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>Biểu tượng / Logo dễ thương</span>
+                  <span className="text-red-500 font-extrabold text-[10px] lowercase animate-pulse">(Hot 🍼)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={10}
+                    value={logoChar}
+                    onChange={(e) => setLogoChar(e.target.value)}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-stone-200 outline-none font-bold text-center focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-amber-50/10"
+                    placeholder="Nhập chữ hoặc dán emoji..."
+                  />
+                </div>
+                {/* Cute Presets select click row */}
+                <div className="flex flex-wrap gap-1.5 pt-1.5 justify-center">
+                  {[
+                    { char: "☁️", label: "Đám mây bồng bềnh" },
+                    { char: "💧", label: "Giọt nước tinh khiết" },
+                    { char: "🍼", label: "Bình sữa" },
+                    { char: "👶", label: "Em bé" },
+                    { char: "🧸", label: "Gấu bông" },
+                    { char: "🐮", label: "Bò sữa" },
+                    { char: "🥛", label: "Ly sữa" },
+                    { char: "✨", label: "Lấp lánh" }
+                  ].map((preset) => (
+                    <button
+                      type="button"
+                      key={preset.char}
+                      onClick={() => setLogoChar(preset.char)}
+                      title={preset.label}
+                      className={`text-sm px-2 py-1 rounded-lg border transition-all hover:scale-115 active:scale-95 cursor-pointer ${
+                        logoChar === preset.char
+                          ? "bg-amber-100 border-amber-400 text-amber-900 shadow-3xs scale-105 font-bold"
+                          : "bg-stone-50 border-stone-150 text-stone-700 hover:bg-white"
+                      }`}
+                    >
+                      {preset.char}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-1.5 text-left">

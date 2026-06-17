@@ -742,10 +742,34 @@ export default function App() {
           {/* Logo brand disclaimer Column */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center text-white font-bold text-lg shadow">
-                {settings.logoChar}
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-200 via-amber-100 to-sky-200 flex items-center justify-center shadow-sm border border-stone-800 select-none relative group">
+                <span className="relative z-10 w-7.5 h-7.5 flex items-center justify-center -translate-y-0.5 filter drop-shadow-[0_1.5px_2px_rgba(56,189,248,0.15)]">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <defs>
+                      <linearGradient id="logoMilkDropFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ffffff" />
+                        <stop offset="60%" stopColor="#f8fafc" />
+                        <stop offset="100%" stopColor="#f0f9ff" />
+                      </linearGradient>
+                    </defs>
+                    {/* Fluffy white cloud body */}
+                    <path
+                      d="M22,72 C12,72 5,64 5,54 C5,45 11,38 19,37 C23,22 37,12 53,12 C67,12 79,22 82,36 C89,38 95,44 95,52 C95,63 87,71 76,71 L22,71 Z"
+                      fill="url(#logoMilkDropFooter)"
+                    />
+                    {/* Cute glowing eyes */}
+                    <path d="M 33,45 Q 37,42 41,45" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                    <path d="M 59,45 Q 63,42 67,45" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                    {/* Smiling mouth */}
+                    <path d="M 47,50 Q 50,54 53,50" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6" />
+                    {/* Blushing cheeks */}
+                    <ellipse cx="29" cy="51" rx="4.5" ry="2.5" fill="#ec4899" opacity="0.45" />
+                    <ellipse cx="71" cy="51" rx="4.5" ry="2.5" fill="#ec4899" opacity="0.45" />
+                  </svg>
+                </span>
+                <span className="absolute -top-1 -right-1 text-amber-400 text-xs animate-bounce">✨</span>
               </div>
-              <span className="text-lg font-black text-white tracking-tight uppercase">{settings.brandName} <span className="text-amber-500">{settings.brandSuffix}</span></span>
+              <span className="text-lg font-black text-white tracking-tight uppercase flex items-center gap-1.5">{settings.brandName} <span className="text-amber-500">{settings.brandSuffix}</span></span>
             </div>
             
             <p className="text-xs text-stone-400 leading-relaxed">
