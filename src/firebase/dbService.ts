@@ -26,13 +26,41 @@ const isMockFirebase = () => {
   }
 };
 
+let isFirestoreOffline = false;
+
+// Helper helper to prevent infinite hanging when Firestore is offline or uninitialized
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 1000): Promise<T> {
+  const currentTimeout = isFirestoreOffline ? 80 : timeoutMs;
+  let timeoutId: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      isFirestoreOffline = true;
+      reject(new Error(`Timeout of ${currentTimeout}ms waiting for Firestore response`));
+    }, currentTimeout);
+  });
+  return Promise.race([
+    promise.then((res) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      return res;
+    }).catch((err) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      const errStr = String(err);
+      if (errStr.includes('offline') || errStr.includes('network') || errStr.includes('failed-precondition') || errStr.includes('permission-denied')) {
+        isFirestoreOffline = true;
+      }
+      throw err;
+    }),
+    timeoutPromise
+  ]);
+}
+
 // ---------------- USER PROFILES SERVICES ----------------
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const path = `users/${uid}`;
   try {
     const docRef = doc(db, 'users', uid);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await withTimeout(getDoc(docRef));
     if (docSnap.exists()) {
       let data = docSnap.data() as UserProfile;
       if (data.email === 'nhuquynhalhp2005@gmail.com' && (data.role !== 'admin' || data.displayName !== 'Như Quỳnh')) {
@@ -66,10 +94,10 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
   const path = `users/${profile.uid}`;
   try {
     const docRef = doc(db, 'users', profile.uid);
-    await setDoc(docRef, {
+    await withTimeout(setDoc(docRef, {
       ...profile,
       updatedAt: new Date().toISOString()
-    });
+    }));
   } catch (error) {
     console.warn("Firestore saveUserProfile failed, saving to LocalStorage:", error);
     const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
@@ -86,7 +114,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
 export async function getAllUsers(): Promise<UserProfile[]> {
   const path = 'users';
   try {
-    const snapshot = await getDocs(collection(db, 'users'));
+    const snapshot = await withTimeout(getDocs(collection(db, 'users')));
     const users: UserProfile[] = [];
     snapshot.forEach((doc) => {
       users.push(doc.data() as UserProfile);
@@ -101,7 +129,7 @@ export async function getAllUsers(): Promise<UserProfile[]> {
 export async function updateUserRole(uid: string, newRole: "user" | "admin"): Promise<void> {
   try {
     const docRef = doc(db, 'users', uid);
-    await updateDoc(docRef, { role: newRole });
+    await withTimeout(updateDoc(docRef, { role: newRole }));
   } catch (error) {
     console.warn("Firestore updateUserRole failed, writing LocalStorage:", error);
     const localUsers = JSON.parse(localStorage.getItem('milkshop_users') || '[]');
@@ -119,7 +147,7 @@ export async function updateUserRole(uid: string, newRole: "user" | "admin"): Pr
 export async function getAllProducts(): Promise<Product[]> {
   const path = 'products';
   try {
-    const snapshot = await getDocs(collection(db, 'products'));
+    const snapshot = await withTimeout(getDocs(collection(db, 'products')));
     let products: Product[] = [];
     snapshot.forEach((doc) => {
       products.push({ id: doc.id, ...doc.data() } as Product);
@@ -130,18 +158,35 @@ export async function getAllProducts(): Promise<Product[]> {
       console.log("Firestore products collection is empty. Seeding initial catalogue...");
       for (const initialProduct of INITIAL_PRODUCTS) {
         try {
-          await addDoc(collection(db, 'products'), initialProduct);
+          await withTimeout(addDoc(collection(db, 'products'), initialProduct));
         } catch (err) {
           console.error("Failed to seed product: " + initialProduct.name, err);
         }
       }
       // Fetch again after seed
-      const newSnapshot = await getDocs(collection(db, 'products'));
+      const newSnapshot = await withTimeout(getDocs(collection(db, 'products')));
       products = [];
       newSnapshot.forEach((doc) => {
         products.push({ id: doc.id, ...doc.data() } as Product);
       });
     }
+
+    // Blend in any local-only draft products (e.g., added by user while offline or in demo session)
+    const localProdsStr = localStorage.getItem('milkshop_products');
+    if (localProdsStr) {
+      try {
+        const localProds: Product[] = JSON.parse(localProdsStr);
+        const localOnly = localProds.filter(p => p.id && p.id.startsWith('prod-local-'));
+        for (const lp of localOnly) {
+          if (!products.some(p => p.name.trim().toLowerCase() === lp.name.trim().toLowerCase())) {
+            products.push(lp);
+          }
+        }
+      } catch (e) {
+        console.error("Error blending local products:", e);
+      }
+    }
+
     return products;
   } catch (error) {
     console.warn("Firestore products fetch failed. Emulating client-side products catalogue:", error);
@@ -159,7 +204,7 @@ export async function getAllProducts(): Promise<Product[]> {
 export async function addProduct(product: Omit<Product, 'id'>): Promise<Product> {
   const path = 'products';
   try {
-    const docRef = await addDoc(collection(db, 'products'), product);
+    const docRef = await withTimeout(addDoc(collection(db, 'products'), product));
     return { ...product, id: docRef.id };
   } catch (error) {
     console.warn("Firestore addProduct failed, writing LocalStorage:", error);
@@ -176,10 +221,19 @@ export async function addProduct(product: Omit<Product, 'id'>): Promise<Product>
 
 export async function updateProduct(id: string, product: Product): Promise<void> {
   const path = `products/${id}`;
+  if (id.startsWith('prod-local-')) {
+    const localProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
+    const idx = localProds.findIndex((p: any) => p.id === id);
+    if (idx >= 0) {
+      localProds[idx] = { ...product };
+      localStorage.setItem('milkshop_products', JSON.stringify(localProds));
+    }
+    return;
+  }
   try {
     const docRef = doc(db, 'products', id);
     const { id: _, ...rest } = product; // strip id out for writing
-    await updateDoc(docRef, { ...rest });
+    await withTimeout(updateDoc(docRef, { ...rest }));
   } catch (error) {
     console.warn("Firestore updateProduct failed, writing LocalStorage:", error);
     const localProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
@@ -193,9 +247,15 @@ export async function updateProduct(id: string, product: Product): Promise<void>
 
 export async function deleteProduct(id: string): Promise<void> {
   const path = `products/${id}`;
+  if (id.startsWith('prod-local-')) {
+    const localProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
+    const filtered = localProds.filter((p: any) => p.id !== id);
+    localStorage.setItem('milkshop_products', JSON.stringify(filtered));
+    return;
+  }
   try {
     const docRef = doc(db, 'products', id);
-    await deleteDoc(docRef);
+    await withTimeout(deleteDoc(docRef));
   } catch (error) {
     console.warn("Firestore deleteProduct failed, writing LocalStorage:", error);
     const localProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
@@ -204,13 +264,46 @@ export async function deleteProduct(id: string): Promise<void> {
   }
 }
 
+export async function syncLocalProductsToCloud(): Promise<{ successCount: number; failedCount: number }> {
+  let successCount = 0;
+  let failedCount = 0;
+  try {
+    const localProdsStr = localStorage.getItem('milkshop_products');
+    if (!localProdsStr) return { successCount, failedCount };
+    
+    const localProds: Product[] = JSON.parse(localProdsStr);
+    const unsyncedProds = localProds.filter(p => p.id && p.id.startsWith('prod-local-'));
+    
+    if (unsyncedProds.length === 0) return { successCount, failedCount };
+    
+    // We will attempt to save each unsynced product using addDoc
+    for (const prod of unsyncedProds) {
+      const { id, ...rest } = prod;
+      try {
+        await withTimeout(addDoc(collection(db, 'products'), rest));
+        successCount++;
+        // Remove from local storage list
+        const latestProds = JSON.parse(localStorage.getItem('milkshop_products') || '[]');
+        const filtered = latestProds.filter((p: any) => p.id !== id);
+        localStorage.setItem('milkshop_products', JSON.stringify(filtered));
+      } catch (err) {
+        console.error("Failed to sync product", prod.name, err);
+        failedCount++;
+      }
+    }
+  } catch (error) {
+    console.error("Error in syncLocalProductsToCloud:", error);
+  }
+  return { successCount, failedCount };
+}
+
 
 // ---------------- ORDERS HISTORY SERVICES ----------------
 
 export async function createOrder(order: Omit<Order, 'id'>): Promise<Order> {
   const path = 'orders';
   try {
-    const docRef = await addDoc(collection(db, 'orders'), order);
+    const docRef = await withTimeout(addDoc(collection(db, 'orders'), order));
     return { ...order, id: docRef.id };
   } catch (error) {
     console.warn("Firestore createOrder failed, writing LocalStorage:", error);
@@ -229,7 +322,7 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
   const path = 'orders';
   try {
     const q = query(collection(db, 'orders'), where('userId', '==', userId));
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q));
     const orders: Order[] = [];
     snapshot.forEach((doc) => {
       orders.push({ id: doc.id, ...doc.data() } as Order);
@@ -248,7 +341,7 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
 export async function getAllOrders(): Promise<Order[]> {
   const path = 'orders';
   try {
-    const snapshot = await getDocs(collection(db, 'orders'));
+    const snapshot = await withTimeout(getDocs(collection(db, 'orders')));
     const orders: Order[] = [];
     snapshot.forEach((doc) => {
       orders.push({ id: doc.id, ...doc.data() } as Order);
@@ -265,7 +358,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   const path = `orders/${orderId}`;
   try {
     const docRef = doc(db, 'orders', orderId);
-    await updateDoc(docRef, { status, updatedAt: new Date().toISOString() });
+    await withTimeout(updateDoc(docRef, { status, updatedAt: new Date().toISOString() }));
   } catch (error) {
     console.warn("Firestore updateOrderStatus failed, writing LocalStorage:", error);
     const localOrders = JSON.parse(localStorage.getItem('milkshop_orders') || '[]');
@@ -357,7 +450,7 @@ export const DEFAULT_SETTINGS: SystemSettings = {
 export async function getSystemSettings(): Promise<SystemSettings> {
   try {
     const docRef = doc(db, 'settings', 'general');
-    const docSnap = await getDoc(docRef);
+    const docSnap = await withTimeout(getDoc(docRef));
     if (docSnap.exists()) {
       return docSnap.data() as SystemSettings;
     }
@@ -377,7 +470,7 @@ export async function getSystemSettings(): Promise<SystemSettings> {
 export async function saveSystemSettings(settings: SystemSettings): Promise<void> {
   try {
     const docRef = doc(db, 'settings', 'general');
-    await setDoc(docRef, settings);
+    await withTimeout(setDoc(docRef, settings));
     localStorage.setItem('milkshop_settings', JSON.stringify(settings));
   } catch (error) {
     console.warn("Firestore saveSystemSettings failed, saving to LocalStorage:", error);

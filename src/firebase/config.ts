@@ -1,7 +1,20 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import defaultFirebaseConfig from '../../firebase-applet-config.json';
+
+// Build custom config from environment if provided, otherwise use workspace default
+const metaEnv = (import.meta as any).env || {};
+const useCustom = !!metaEnv.VITE_FIREBASE_API_KEY;
+const firebaseConfig = useCustom ? {
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY,
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: metaEnv.VITE_FIREBASE_APP_ID,
+  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || "(default)"
+} : defaultFirebaseConfig;
 
 // Initialize Firebase safely
 let app;

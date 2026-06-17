@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User, MapPin, Phone, Sparkles, Shield, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, User, MapPin, Phone, Sparkles, Shield, AlertCircle, RefreshCw, Eye, EyeOff, Chrome } from 'lucide-react';
 import { auth, googleProvider } from '../firebase/config';
 import { 
   signInWithEmailAndPassword, 
@@ -72,6 +72,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
           createdAt: new Date().toISOString()
         };
         await saveUserProfile(profile);
+      } else if (user.email === 'nhuquynhalhp2005@gmail.com' && (profile.role !== 'admin' || profile.displayName !== 'Như Quỳnh')) {
+        profile.role = 'admin';
+        profile.displayName = 'Như Quỳnh';
+        await saveUserProfile(profile);
       }
       
       setSuccessMessage("Đăng nhập bằng tài khoản Google thành công!");
@@ -81,7 +85,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      setErrorMessage("Lỗi xác thực Google: " + err.message);
+      const errorCode = err?.code || "";
+      if (errorCode === "auth/unauthorized-domain") {
+        setErrorMessage(
+          "Lỗi: Tên miền này chưa được cấu hình. Vui lòng vào Firebase Console > Authentication > Settings (Cài đặt) > Authorized Domains và thêm tên miền hiện tại của bạn (Ví dụ: tên miền Vercel của bạn) để cho phép đăng nhập Google."
+        );
+      } else if (errorCode === "auth/operation-not-allowed") {
+        setErrorMessage(
+          "Dịch vụ đăng nhập bằng Google chưa được bật. Vui lòng vào Firebase Console > Authentication > Sign-in method và Bật (Enable) phương thức đăng nhập bằng Google."
+        );
+      } else if (err?.message?.includes("popup-closed-by-user") || errorCode === "auth/popup-closed-by-user") {
+        setErrorMessage("Cửa sổ đăng nhập Google bị đóng trước khi hoàn thành.");
+      } else {
+        setErrorMessage("Lỗi xác thực Google: " + (err?.message || "Vui lòng kiểm tra lại cấu hình Firebase của bạn."));
+      }
     } finally {
       setLoading(false);
     }
@@ -420,6 +437,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                 {loading ? "Đang xác thực..." : "Đăng Nhập"}
               </button>
 
+              {/* Google Sign-In Element Block */}
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-stone-200"></div>
+                <span className="flex-shrink mx-3 text-[11px] text-stone-400 font-bold uppercase tracking-wider">Hoặc tiếp tục với</span>
+                <div className="flex-grow border-t border-stone-200"></div>
+              </div>
+
+              <button
+                type="button"
+                id="auth-google-signin-btn"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-stone-200 rounded-2xl bg-stone-50 text-stone-700 font-bold text-sm hover:bg-stone-100 active:scale-95 duration-250 cursor-pointer disabled:opacity-50 shadow-sm"
+              >
+                <Chrome className="w-5 h-5 text-red-500 animate-pulse" />
+                <span>Đăng nhập bằng Google</span>
+              </button>
+
               {/* Direct register and forgot triggers underneath */}
               <div className="pt-3 border-t border-stone-100 flex flex-col items-center gap-2 text-xs">
                 <button
@@ -562,6 +597,24 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black text-sm shadow-md hover:shadow-lg active:scale-95 duration-200 cursor-pointer disabled:opacity-50"
               >
                 {loading ? "Đang đăng ký..." : "Đăng Ký"}
+              </button>
+
+              {/* Google Sign-Up Element Block */}
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-stone-200"></div>
+                <span className="flex-shrink mx-3 text-[11px] text-stone-400 font-bold uppercase tracking-wider">Hoặc tiếp tục với</span>
+                <div className="flex-grow border-t border-stone-200"></div>
+              </div>
+
+              <button
+                type="button"
+                id="auth-google-signup-btn"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-stone-200 rounded-2xl bg-stone-50 text-stone-700 font-bold text-sm hover:bg-stone-100 active:scale-95 duration-250 cursor-pointer disabled:opacity-50 shadow-sm"
+              >
+                <Chrome className="w-5 h-5 text-red-500" />
+                <span>Đăng ký nhanh bằng Google</span>
               </button>
 
               <div className="pt-3 border-t border-stone-100 text-center">

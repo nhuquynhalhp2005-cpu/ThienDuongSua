@@ -729,6 +729,7 @@ export default function App() {
               users={users}
               onRefreshData={loadData}
               settings={settings}
+              isDemoMode={isDemoMode}
             />
           </div>
         )}

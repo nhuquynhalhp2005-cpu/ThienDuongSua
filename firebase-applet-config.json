@@ -1,10 +1,10 @@
 {
-  "projectId": "oceanic-sentinel-dr4g1",
-  "appId": "1:358775085968:web:cbff4c363a0d19657af115",
-  "apiKey": "AIzaSyDZ2U9-97pEWoCu9FQR5t9Beh-QtG3AjIM",
-  "authDomain": "oceanic-sentinel-dr4g1.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-2091cb96-5d01-41c1-a253-49cfce688f2c",
-  "storageBucket": "oceanic-sentinel-dr4g1.firebasestorage.app",
-  "messagingSenderId": "358775085968",
-  "measurementId": ""
+  "projectId": "thienduongsua-1c34b",
+  "appId": "1:219160547444:web:a6f062cc03964517b24121",
+  "apiKey": "AIzaSyC4-3YHU11wv7Ev1wTrDcVmfWYW2y-PF0w",
+  "authDomain": "thienduongsua-1c34b.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "thienduongsua-1c34b.firebasestorage.app",
+  "messagingSenderId": "219160547444",
+  "measurementId": "G-HLEV22JQNC"
 }

@@ -6,7 +6,8 @@ import {
 import { Product, Order, UserProfile, MilkCategory, SystemSettings, Slide, HomeCategorySetting } from '../types';
 import { 
   addProduct, updateProduct, deleteProduct, 
-  updateOrderStatus, updateUserRole, saveSystemSettings
+  updateOrderStatus, updateUserRole, saveSystemSettings,
+  syncLocalProductsToCloud
 } from '../firebase/dbService';
 
 interface AdminPanelProps {
@@ -15,6 +16,7 @@ interface AdminPanelProps {
   users: UserProfile[];
   onRefreshData: () => void;
   settings: SystemSettings;
+  isDemoMode?: boolean;
 }
 
 export default function AdminPanel({
@@ -22,7 +24,8 @@ export default function AdminPanel({
   orders,
   users,
   onRefreshData,
-  settings
+  settings,
+  isDemoMode = false
 }: AdminPanelProps) {
   const [adminTab, setAdminTab] = useState<'products' | 'orders' | 'users' | 'settings'>('products');
 
@@ -415,6 +418,58 @@ export default function AdminPanel({
       {/* Tab A: Products Catalog Administration with add and edit */}
       {adminTab === 'products' && (
         <div className="space-y-6">
+          {/* Banner báo hiệu sản phẩm lưu tạm chưa đồng bộ */}
+          {products.some(p => p.id && p.id.startsWith('prod-local-')) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-5 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+              <div className="flex gap-3">
+                <div className="p-2.5 bg-amber-100/80 text-amber-700 rounded-2xl shrink-0">
+                  <ShieldAlert className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-amber-900">
+                    Phát hiện {products.filter(p => p.id && p.id.startsWith('prod-local-')).length} sản phẩm lưu tạm thời trên trình duyệt
+                  </h5>
+                  <p className="text-[11px] text-amber-700 mt-1 font-medium leading-relaxed">
+                    Các sản phẩm do bạn thêm mới hiện đang được lưu tạm trên trình duyệt này (LocalStorage). Để lưu chúng vĩnh viễn trên Cơ sở dữ liệu Cloud đám mây mà không bao giờ bị mất, hãy thực hiện Đồng bộ hoá.
+                  </p>
+                  {isDemoMode && (
+                    <p className="text-[10px] text-stone-500 mt-1.5 bg-white/40 p-1.5 rounded-lg border border-dotted border-amber-200">
+                      ℹ️ Bạn đang ở <strong>Chế độ Trải nghiệm thử (Demo Mode)</strong>. Vui lòng Đăng xuất và Đăng nhập bằng tài khoản Quản trị thật (ví dụ: Google account) để thực hiện quyền lưu trữ Cloud đám mây.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {!isDemoMode ? (
+                <button
+                  id="admin-sync-cloud-btn"
+                  onClick={async () => {
+                    try {
+                      const res = await syncLocalProductsToCloud();
+                      if (res.successCount > 0) {
+                        alert(`Đồng bộ thành công ${res.successCount} sản phẩm lên lưu trữ Cloud vĩnh viễn! 🎉`);
+                        onRefreshData();
+                      } else {
+                        alert("Không tìm thấy sản phẩm cục bộ mới nào chưa được đồng bộ hoặc đồng bộ không thành công.");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert("Có lỗi xảy ra trong quá trình đồng bộ lên Cloud.");
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all w-full md:w-auto justify-center cursor-pointer shadow-sm shrink-0"
+                >
+                  <FolderSync className="w-4 h-4" />
+                  <span>Đồng bộ lên Cloud ngay ☁️</span>
+                </button>
+              ) : (
+                <div className="text-[11px] font-bold text-amber-800 bg-amber-100 px-3 py-1.5 rounded-xl shrink-0">
+                  Sử dụng tài khoản thật để lưu Cloud
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-5 rounded-3xl border border-stone-100 shadow-xs">
             {/* Table Search */}
             <div className="relative w-full sm:w-80">
@@ -632,7 +687,20 @@ export default function AdminPanel({
                           alt={p.name}
                           className="w-10 h-10 object-contain bg-stone-50 rounded-lg p-0.5 border"
                         />
-                        <span className="font-bold text-stone-800 line-clamp-1 max-w-xs">{p.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-stone-800 line-clamp-1 max-w-xs">{p.name}</span>
+                          <div className="flex gap-1.5 items-center mt-1">
+                            {p.id && p.id.startsWith('prod-local-') ? (
+                              <span className="shrink-0 bg-amber-100 text-amber-800 font-extrabold text-[9px] px-2 py-0.5 rounded-md border border-amber-200/50">
+                                Local/Nháp tạm
+                              </span>
+                            ) : (
+                              <span className="shrink-0 bg-sky-100 text-sky-800 font-extrabold text-[9px] px-2 py-0.5 rounded-md border border-sky-200/50" title="Đã lưu trữ đám mây Cloud vĩnh viễn">
+                                Đám mây Cloud ☁️
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="p-4 text-stone-600 font-bold">{p.brand}</td>
                       <td className="p-4 text-stone-500 text-[11px] capitalize">{p.category}</td>
